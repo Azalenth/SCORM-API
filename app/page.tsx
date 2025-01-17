@@ -12,37 +12,39 @@ export default function TestPage() {
   const [result, setResult] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleStore = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/completion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ learnerId, courseId, completionStatus }),
-      })
-      const data = await response.json()
-      setResult(JSON.stringify(data, null, 2))
-    } catch (error) {
-      setResult(JSON.stringify({ error: 'Failed to store data' }, null, 2))
-    } finally {
-      setLoading(false)
-    }
+const handleStore = async () => {
+  try {
+    setLoading(true)
+    const response = await fetch('/api/completion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ learnerId, courseId, completionStatus }),
+    })
+    const data = await response.json()
+    setResult(JSON.stringify(data, null, 2))
+  } catch (err) {
+    console.error('Failed to store data:', err)
+    setResult(JSON.stringify({ error: 'Failed to store data' }, null, 2))
+  } finally {
+    setLoading(false)
   }
+}
 
-  const handleRetrieve = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch(
-        `/api/completion?learnerId=${encodeURIComponent(learnerId)}&courseId=${encodeURIComponent(courseId)}`
-      )
-      const data = await response.json()
-      setResult(JSON.stringify(data, null, 2))
-    } catch (error) {
-      setResult(JSON.stringify({ error: 'Failed to retrieve data' }, null, 2))
-    } finally {
-      setLoading(false)
-    }
+const handleRetrieve = async () => {
+  try {
+    setLoading(true)
+    const response = await fetch(
+      `/api/completion?learnerId=${encodeURIComponent(learnerId)}&courseId=${encodeURIComponent(courseId)}`
+    )
+    const data = await response.json()
+    setResult(JSON.stringify(data, null, 2))
+  } catch (err) {
+    console.error('Failed to retrieve data:', err)
+    setResult(JSON.stringify({ error: 'Failed to retrieve data' }, null, 2))
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <main className="min-h-screen bg-gray-50 p-4">
