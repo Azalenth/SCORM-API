@@ -102,17 +102,3 @@ function SCORM_SetComplete() {
   return false;
 }
 
-// Example usage in Storyline:
-/*
-  // In the first course (source course):
-  var learnerId = SCORM_GetStudentID();
-  sendCompletionData(learnerId, 'course1', 'completed')
-    .then(() => SCORM_SetComplete())
-    .catch(error => console.error('Error:', error));
-
-  // In the second course (target course):
-  var learnerId = SCORM_GetStudentID();
-  getCompletionData(learnerId, 'course1')
-    .catch(error => console.error('Error:', error));
-*/
-

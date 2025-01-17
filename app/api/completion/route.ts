@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
 import { Pool } from 'pg'
 
+// Initialize the connection pool
 const pool = new Pool({
-  connectionString: process.env.NEON_DATABASE_URL,
+  connectionString: process.env.POSTGRES_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 })
 
-// Handle POST requests to store completion data
 export async function POST(request: Request) {
   try {
     const { learnerId, courseId, completionStatus } = await request.json()
 
-    // Validate required fields
     if (!learnerId || !courseId || !completionStatus) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -18,7 +20,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Store completion data
     const client = await pool.connect()
     try {
       await client.query(
@@ -47,14 +48,12 @@ export async function POST(request: Request) {
   }
 }
 
-// Handle GET requests to retrieve completion data
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const learnerId = searchParams.get('learnerId')
     const courseId = searchParams.get('courseId')
 
-    // Validate required parameters
     if (!learnerId || !courseId) {
       return NextResponse.json(
         { error: 'Missing learnerId or courseId' },
@@ -62,7 +61,6 @@ export async function GET(request: Request) {
       )
     }
 
-    // Retrieve completion data
     const client = await pool.connect()
     try {
       const result = await client.query(
