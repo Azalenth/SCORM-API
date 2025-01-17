@@ -38,7 +38,7 @@ function makeRequest(url, method, data) {
 async function sendCompletionData(learnerId, courseId, status) {
   try {
     console.log('Sending completion data...');
-    const result = await makeRequest('https://scorm-g3547m7s2-azalenths-projects.vercel.app/api/completion', 'POST', {
+    const result = await makeRequest('https://scorm-api.vercel.app/api/completion', 'POST', {
       learnerId: learnerId,
       courseId: courseId,
       completionStatus: status
@@ -56,7 +56,7 @@ async function getCompletionData(learnerId, courseId) {
   try {
     console.log('Retrieving completion data...');
     const result = await makeRequest(
-      `https://scorm-g3547m7s2-azalenths-projects.vercel.app/api/completion?learnerId=${encodeURIComponent(learnerId)}&courseId=${encodeURIComponent(courseId)}`,
+      `https://scorm-api.vercel.app/api/completion?learnerId=${encodeURIComponent(learnerId)}&courseId=${encodeURIComponent(courseId)}`,
       'GET'
     );
     
