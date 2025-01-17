@@ -1,3 +1,5 @@
+console.log("storyline-functions.js loaded");
+
 // Utility function to handle API calls
 function makeRequest(url, method, data) {
   return new Promise((resolve, reject) => {
