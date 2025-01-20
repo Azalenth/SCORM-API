@@ -73,14 +73,10 @@
     // SCORM utility functions
     function SCORM_GetStudentID() {
       try {
-        if (typeof pipwerks !== "undefined" && pipwerks.SCORM) {
-          var scorm = pipwerks.SCORM
-          if (scorm.version) {
-            return scorm.get("cmi.core.student_id") || scorm.get("cmi.learner_id") || ""
-          }
-        } else if (typeof GetStudentID === "function") {
-          // Fallback to Storyline's built-in GetStudentID function
+        if (typeof GetStudentID === "function") {
           return GetStudentID()
+        } else if (typeof player !== "undefined" && typeof player.GetVar === "function") {
+          return player.GetVar("StudentID")
         }
       } catch (e) {
         console.error("Error getting student ID:", e)
@@ -91,14 +87,11 @@
   
     function SCORM_SetComplete() {
       try {
-        if (typeof pipwerks !== "undefined" && pipwerks.SCORM) {
-          var scorm = pipwerks.SCORM
-          if (scorm.version) {
-            return scorm.set("cmi.core.lesson_status", "completed") || scorm.set("cmi.completion_status", "completed")
-          }
-        } else if (typeof SetScore === "function") {
-          // Fallback to Storyline's built-in SetScore function
+        if (typeof SetScore === "function") {
           return SetScore(100, 100, 100)
+        } else if (typeof player !== "undefined" && typeof player.SetVar === "function") {
+          player.SetVar("cmi.core.lesson_status", "completed")
+          return true
         }
       } catch (e) {
         console.error("Error setting completion status:", e)
