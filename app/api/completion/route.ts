@@ -30,23 +30,30 @@ function runMiddleware(req: any, res: any, fn: Function) {
 }
 
 export async function OPTIONS(req: Request) {
+  console.log("OPTIONS request received")
   const res = new NextResponse()
   await runMiddleware(req, res, cors)
-  return res
+  console.log("CORS middleware applied for OPTIONS")
+  return new NextResponse(null, { status: 200 })
 }
 
 export async function POST(req: Request) {
+  console.log("POST request received")
   const res = new NextResponse()
   await runMiddleware(req, res, cors)
+  console.log("CORS middleware applied for POST")
 
   try {
     const { learnerId, courseId, completionStatus } = await req.json()
+    console.log("Received data:", { learnerId, courseId, completionStatus })
 
     if (!learnerId || !courseId || !completionStatus) {
+      console.log("Missing required fields")
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
     const client = await pool.connect()
+    console.log("Database connection established")
     try {
       await client.query(
         `INSERT INTO course_completion (learner_id, course_id, completion_status)
@@ -57,6 +64,7 @@ export async function POST(req: Request) {
            updated_at = CURRENT_TIMESTAMP`,
         [learnerId, courseId, completionStatus],
       )
+      console.log("Database query executed successfully")
 
       return NextResponse.json({
         success: true,
@@ -64,6 +72,7 @@ export async function POST(req: Request) {
       })
     } finally {
       client.release()
+      console.log("Database connection released")
     }
   } catch (error) {
     console.error("Error storing completion data:", error)
@@ -72,19 +81,24 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
+  console.log("GET request received")
   const res = new NextResponse()
   await runMiddleware(req, res, cors)
+  console.log("CORS middleware applied for GET")
 
   try {
     const { searchParams } = new URL(req.url)
     const learnerId = searchParams.get("learnerId")
     const courseId = searchParams.get("courseId")
+    console.log("Received parameters:", { learnerId, courseId })
 
     if (!learnerId || !courseId) {
+      console.log("Missing learnerId or courseId")
       return NextResponse.json({ error: "Missing learnerId or courseId" }, { status: 400 })
     }
 
     const client = await pool.connect()
+    console.log("Database connection established")
     try {
       const result = await client.query(
         `SELECT 
@@ -95,17 +109,21 @@ export async function GET(req: Request) {
         AND course_id = $2`,
         [learnerId, courseId],
       )
+      console.log("Database query executed successfully")
 
       if (result.rows.length > 0) {
+        console.log("Completion data found:", result.rows[0])
         return NextResponse.json({
           completionStatus: result.rows[0].completion_status,
           lastUpdated: result.rows[0].updated_at,
         })
       } else {
+        console.log("No completion data found")
         return NextResponse.json({ completionStatus: "not_started" })
       }
     } finally {
       client.release()
+      console.log("Database connection released")
     }
   } catch (error) {
     console.error("Error retrieving completion data:", error)
