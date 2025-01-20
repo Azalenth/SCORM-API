@@ -11,12 +11,12 @@ const pool = new Pool({
   },
 });
 
-// Initializing the cors middleware
+// Initialize the cors middleware
 const cors = Cors({
   methods: ["GET", "POST", "OPTIONS"],
   origin: "*", // Be cautious with this in production
   allowedHeaders: ["Content-Type"],
-  optionsSuccessStatus: 200,
+  optionsSuccessStatus: 204, // No Content
 });
 
 // Define a specific type for the middleware function
@@ -36,14 +36,12 @@ function runMiddleware(req: IncomingMessage, res: ServerResponse, fn: Middleware
 
 // Middleware wrapper to adapt Next.js request/response to Node.js
 async function middlewareWrapper(req: NextRequest, res: NextResponse, fn: MiddlewareFunction) {
-  // Create a mock request object compatible with the cors middleware
   const reqAdapted = {
     headers: Object.fromEntries(req.headers.entries()),
     method: req.method ?? "GET",
     url: req.url,
   } as unknown as IncomingMessage;
 
-  // Create a mock response object compatible with the cors middleware
   const resAdapted = {
     setHeader: (key: string, value: string) => res.headers.set(key, value),
     end: () => {},
