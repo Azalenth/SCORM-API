@@ -15,6 +15,7 @@ const pool = new Pool({
 const cors = Cors({
   methods: ["GET", "POST", "OPTIONS"],
   origin: "*", // Be cautious with this in production
+  allowedHeaders: ["Content-Type"],
   optionsSuccessStatus: 200,
 });
 
@@ -55,7 +56,7 @@ export async function OPTIONS(req: NextRequest) {
   const res = new NextResponse();
   await middlewareWrapper(req, res, cors);
   return new NextResponse(null, {
-    status: 200,
+    status: 204, // No Content
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
