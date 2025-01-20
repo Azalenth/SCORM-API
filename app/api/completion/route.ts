@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { Pool } from "pg"
-import type { NextApiRequest } from "next"
 import Cors from "cors"
 
 // Initialize the connection pool
@@ -14,10 +13,12 @@ const pool = new Pool({
 // Initializing the cors middleware
 const cors = Cors({
   methods: ["GET", "POST", "OPTIONS"],
+  origin: "*", // Be cautious with this in production
+  optionsSuccessStatus: 200,
 })
 
 // Helper method to run middleware
-function runMiddleware(req: NextApiRequest, res: NextResponse, fn: Function) {
+function runMiddleware(req: any, res: any, fn: Function) {
   return new Promise((resolve, reject) => {
     fn(req, res, (result: any) => {
       if (result instanceof Error) {
@@ -28,12 +29,14 @@ function runMiddleware(req: NextApiRequest, res: NextResponse, fn: Function) {
   })
 }
 
-export async function OPTIONS(req: NextApiRequest, res: NextResponse) {
+export async function OPTIONS(req: Request) {
+  const res = new NextResponse()
   await runMiddleware(req, res, cors)
-  return new NextResponse(null, { status: 200 })
+  return res
 }
 
-export async function POST(req: NextApiRequest, res: NextResponse) {
+export async function POST(req: Request) {
+  const res = new NextResponse()
   await runMiddleware(req, res, cors)
 
   try {
@@ -68,11 +71,12 @@ export async function POST(req: NextApiRequest, res: NextResponse) {
   }
 }
 
-export async function GET(req: NextApiRequest, res: NextResponse) {
+export async function GET(req: Request) {
+  const res = new NextResponse()
   await runMiddleware(req, res, cors)
 
   try {
-    const { searchParams } = new URL(req.url as string)
+    const { searchParams } = new URL(req.url)
     const learnerId = searchParams.get("learnerId")
     const courseId = searchParams.get("courseId")
 
