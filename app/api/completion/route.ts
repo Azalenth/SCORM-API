@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "pg";
-import Cors from "cors";
-import type { IncomingMessage, ServerResponse } from "http";
+import { NextResponse } from "next/server"
+import { Pool } from "pg"
+import Cors from "cors"
 
 // Initialize the connection pool
 const pool = new Pool({
@@ -9,46 +8,30 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false,
   },
-});
+})
 
 // Initializing the cors middleware
 const cors = Cors({
   methods: ["GET", "POST", "OPTIONS"],
   origin: "*", // Be cautious with this in production
   optionsSuccessStatus: 200,
-});
+})
 
 // Helper method to run middleware
-function runMiddleware(req: IncomingMessage, res: ServerResponse, fn: (req: IncomingMessage, res: ServerResponse, next: (result?: unknown) => void) => void) {
-  return new Promise<void>((resolve, reject) => {
-    fn(req, res, (result: unknown) => {
+function runMiddleware(req: any, res: any, fn: Function) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result: any) => {
       if (result instanceof Error) {
-        return reject(result);
+        return reject(result)
       }
-      return resolve();
-    });
-  });
+      return resolve(result)
+    })
+  })
 }
 
-// Middleware wrapper to adapt Next.js request/response to Node.js
-async function middlewareWrapper(req: NextRequest, res: NextResponse, fn: (req: IncomingMessage, res: ServerResponse, next: (result?: unknown) => void) => void) {
-  const reqAdapted: IncomingMessage = {
-    headers: Object.fromEntries(req.headers.entries()),
-    method: req.method ?? "GET",
-    url: req.url,
-  } as IncomingMessage;
-
-  const resAdapted: ServerResponse = {
-    setHeader: (key: string, value: string) => res.headers.set(key, value),
-    end: () => {},
-  } as unknown as ServerResponse;
-
-  await runMiddleware(reqAdapted, resAdapted, fn);
-}
-
-export async function OPTIONS(req: NextRequest) {
-  const res = new NextResponse();
-  await middlewareWrapper(req, res, cors);
+export async function OPTIONS(req: Request) {
+  const res = new NextResponse()
+  await runMiddleware(req, res, cors)
   return new NextResponse(null, {
     status: 200,
     headers: {
@@ -56,15 +39,15 @@ export async function OPTIONS(req: NextRequest) {
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },
-  });
+  })
 }
 
-export async function POST(req: NextRequest) {
-  const res = new NextResponse();
-  await middlewareWrapper(req, res, cors);
+export async function POST(req: Request) {
+  const res = new NextResponse()
+  await runMiddleware(req, res, cors)
 
   try {
-    const { learnerId, courseId, completionStatus } = await req.json();
+    const { learnerId, courseId, completionStatus } = await req.json()
 
     if (!learnerId || !courseId || !completionStatus) {
       return NextResponse.json(
@@ -74,11 +57,11 @@ export async function POST(req: NextRequest) {
           headers: {
             "Access-Control-Allow-Origin": "*",
           },
-        }
-      );
+        },
+      )
     }
 
-    const client = await pool.connect();
+    const client = await pool.connect()
     try {
       await client.query(
         `INSERT INTO course_completion (learner_id, course_id, completion_status)
@@ -87,8 +70,8 @@ export async function POST(req: NextRequest) {
          DO UPDATE SET 
            completion_status = $3,
            updated_at = CURRENT_TIMESTAMP`,
-        [learnerId, courseId, completionStatus]
-      );
+        [learnerId, courseId, completionStatus],
+      )
 
       return NextResponse.json(
         {
@@ -100,13 +83,13 @@ export async function POST(req: NextRequest) {
           headers: {
             "Access-Control-Allow-Origin": "*",
           },
-        }
-      );
+        },
+      )
     } finally {
-      client.release();
+      client.release()
     }
   } catch (error) {
-    console.error("Error storing completion data:", error);
+    console.error("Error storing completion data:", error)
     return NextResponse.json(
       { error: "Failed to store completion data" },
       {
@@ -114,19 +97,19 @@ export async function POST(req: NextRequest) {
         headers: {
           "Access-Control-Allow-Origin": "*",
         },
-      }
-    );
+      },
+    )
   }
 }
 
-export async function GET(req: NextRequest) {
-  const res = new NextResponse();
-  await middlewareWrapper(req, res, cors);
+export async function GET(req: Request) {
+  const res = new NextResponse()
+  await runMiddleware(req, res, cors)
 
   try {
-    const { searchParams } = new URL(req.url);
-    const learnerId = searchParams.get("learnerId");
-    const courseId = searchParams.get("courseId");
+    const { searchParams } = new URL(req.url)
+    const learnerId = searchParams.get("learnerId")
+    const courseId = searchParams.get("courseId")
 
     if (!learnerId || !courseId) {
       return NextResponse.json(
@@ -136,11 +119,11 @@ export async function GET(req: NextRequest) {
           headers: {
             "Access-Control-Allow-Origin": "*",
           },
-        }
-      );
+        },
+      )
     }
 
-    const client = await pool.connect();
+    const client = await pool.connect()
     try {
       const result = await client.query(
         `SELECT 
@@ -149,10 +132,16 @@ export async function GET(req: NextRequest) {
         FROM course_completion 
         WHERE learner_id = $1 
         AND course_id = $2`,
-        [learnerId, courseId]
-      );
+        [learnerId, courseId],
+      )
 
       if (result.rows.length > 0) {
+        console.log("Completion data found:", {
+          learnerId,
+          courseId,
+          completionStatus: result.rows[0].completion_status,
+          lastUpdated: result.rows[0].updated_at,
+        })
         return NextResponse.json(
           {
             completionStatus: result.rows[0].completion_status,
@@ -163,9 +152,10 @@ export async function GET(req: NextRequest) {
             headers: {
               "Access-Control-Allow-Origin": "*",
             },
-          }
-        );
+          },
+        )
       } else {
+        console.log("No completion data found for:", { learnerId, courseId })
         return NextResponse.json(
           { completionStatus: "not_started" },
           {
@@ -173,14 +163,14 @@ export async function GET(req: NextRequest) {
             headers: {
               "Access-Control-Allow-Origin": "*",
             },
-          }
-        );
+          },
+        )
       }
     } finally {
-      client.release();
+      client.release()
     }
   } catch (error) {
-    console.error("Error retrieving completion data:", error);
+    console.error("Error retrieving completion data:", error)
     return NextResponse.json(
       { error: "Failed to retrieve completion data" },
       {
@@ -188,7 +178,8 @@ export async function GET(req: NextRequest) {
         headers: {
           "Access-Control-Allow-Origin": "*",
         },
-      }
-    );
+      },
+    )
   }
 }
+
