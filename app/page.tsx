@@ -12,39 +12,57 @@ export default function TestPage() {
   const [result, setResult] = useState('')
   const [loading, setLoading] = useState(false)
 
-const handleStore = async () => {
-  try {
-    setLoading(true)
-    const response = await fetch('/api/completion', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ learnerId, courseId, completionStatus }),
-    })
-    const data = await response.json()
-    setResult(JSON.stringify(data, null, 2))
-  } catch (err) {
-    console.error('Failed to store data:', err)
-    setResult(JSON.stringify({ error: 'Failed to store data' }, null, 2))
-  } finally {
-    setLoading(false)
+  const handleStore = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/completion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ learnerId, courseId, completionStatus }),
+      })
+      const data = await response.json()
+      setResult(JSON.stringify(data, null, 2))
+    } catch (err) {
+      console.error('Failed to store data:', err)
+      setResult(JSON.stringify({ error: 'Failed to store data' }, null, 2))
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
-const handleRetrieve = async () => {
-  try {
-    setLoading(true)
-    const response = await fetch(
-      `/api/completion?learnerId=${encodeURIComponent(learnerId)}&courseId=${encodeURIComponent(courseId)}`
-    )
-    const data = await response.json()
-    setResult(JSON.stringify(data, null, 2))
-  } catch (err) {
-    console.error('Failed to retrieve data:', err)
-    setResult(JSON.stringify({ error: 'Failed to retrieve data' }, null, 2))
-  } finally {
-    setLoading(false)
+  const handleRetrieve = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(
+        `/api/completion?learnerId=${encodeURIComponent(learnerId)}&courseId=${encodeURIComponent(courseId)}`
+      )
+      const data = await response.json()
+      setResult(JSON.stringify(data, null, 2))
+    } catch (err) {
+      console.error('Failed to retrieve data:', err)
+      setResult(JSON.stringify({ error: 'Failed to retrieve data' }, null, 2))
+    } finally {
+      setLoading(false)
+    }
   }
-}
+
+  const handleDelete = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/completion', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ learnerId, courseId }),
+      })
+      const data = await response.json()
+      setResult(JSON.stringify(data, null, 2))
+    } catch (err) {
+      console.error('Failed to delete data:', err)
+      setResult(JSON.stringify({ error: 'Failed to delete data' }, null, 2))
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 p-4">
@@ -89,6 +107,9 @@ const handleRetrieve = async () => {
             <Button onClick={handleRetrieve} disabled={loading} variant="outline">
               Retrieve Completion
             </Button>
+            <Button onClick={handleDelete} disabled={loading} variant="destructive">
+              Delete Completion
+            </Button>
           </div>
           
           {result && (
@@ -104,4 +125,3 @@ const handleRetrieve = async () => {
     </main>
   )
 }
-
