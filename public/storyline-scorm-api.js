@@ -5,9 +5,7 @@
         var xhr = new XMLHttpRequest()
         xhr.open(method, url, true)
   
-        if (method === "POST") {
-          xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8")
-        }
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8")
   
         xhr.onreadystatechange = () => {
           if (xhr.readyState === 4) {
@@ -18,7 +16,7 @@
                 reject(new Error("Invalid JSON response"))
               }
             } else {
-              reject(new Error("Request failed"))
+              reject(new Error("Request failed with status " + xhr.status))
             }
           }
         }
@@ -77,6 +75,11 @@
           return GetStudentID()
         } else if (typeof player !== "undefined" && typeof player.GetVar === "function") {
           return player.GetVar("StudentID")
+        } else if (typeof pipwerks !== "undefined" && pipwerks.SCORM) {
+          var scorm = pipwerks.SCORM
+          if (scorm.version) {
+            return scorm.get("cmi.core.student_id") || scorm.get("cmi.learner_id") || ""
+          }
         }
       } catch (e) {
         console.error("Error getting student ID:", e)
@@ -92,6 +95,11 @@
         } else if (typeof player !== "undefined" && typeof player.SetVar === "function") {
           player.SetVar("cmi.core.lesson_status", "completed")
           return true
+        } else if (typeof pipwerks !== "undefined" && pipwerks.SCORM) {
+          var scorm = pipwerks.SCORM
+          if (scorm.version) {
+            return scorm.set("cmi.core.lesson_status", "completed") || scorm.set("cmi.completion_status", "completed")
+          }
         }
       } catch (e) {
         console.error("Error setting completion status:", e)
