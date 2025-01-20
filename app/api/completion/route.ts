@@ -12,7 +12,7 @@ const pool = new Pool({
 // Function to set CORS headers
 function setCorsHeaders(res: NextResponse) {
   res.headers.set("Access-Control-Allow-Origin", "*");
-  res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE");
   res.headers.set("Access-Control-Allow-Headers", "Content-Type");
 }
 
@@ -150,3 +150,60 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  const res = new NextResponse();
+  await middlewareWrapper(req, res);
+
+  try {
+    const { learnerId, courseId } = await req.json();
+
+    if (!learnerId || !courseId) {
+      return new NextResponse(
+        JSON.stringify({ error: "Missing learnerId or courseId" }),
+        {
+          status: 400,
+          headers: { "Access-Control-Allow-Origin": "*" },
+        }
+      );
+    }
+
+    const client = await pool.connect();
+    try {
+      const result = await client.query(
+        `DELETE FROM course_completion WHERE learner_id = $1 AND course_id = $2`,
+        [learnerId, courseId]
+      );
+
+      if (result.rowCount && result.rowCount > 0) {
+        return new NextResponse(
+          JSON.stringify({ success: true, message: "Completion data deleted successfully" }),
+          {
+            status: 200,
+            headers: { "Access-Control-Allow-Origin": "*" },
+          }
+        );
+      } else {
+        return new NextResponse(
+          JSON.stringify({ error: "No data found to delete" }),
+          {
+            status: 404,
+            headers: { "Access-Control-Allow-Origin": "*" },
+          }
+        );
+      }
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error("Error deleting completion data:", error);
+    return new NextResponse(
+      JSON.stringify({ error: "Failed to delete data" }),
+      {
+        status: 500,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      }
+    );
+  }
+}
+
